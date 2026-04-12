@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carrier Pigeon — UTM Chaos for Chrome</title>
+  <meta name="description" content="A Chrome extension that replaces UTM tracking parameters with hilariously implausible alternatives — at the network level, before the server sees them.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #1e1b4b;
+      --primary: #4f46e5;
+      --card:    #2d2a6e;
+      --border:  #312e81;
+      --text:    #e0e7ff;
+      --muted:   #818cf8;
+      --accent:  #6366f1;
+      --green:   #34d399;
+      --red:     #f87171;
+      --mono:    'JetBrains Mono', 'Fira Code', monospace;
+      --display: 'Syne', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      color: var(--text);
+      font-family: var(--mono);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Nav ───────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(1rem, 4vw, 2.5rem);
+      height: 58px;
+      background: rgba(30,27,75,0.82);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--display); font-size: 1rem; font-weight: 800;
+      color: var(--text); text-decoration: none;
+      display: flex; align-items: center; gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-right { display: flex; align-items: center; gap: 1.25rem; }
+
+    .nav-link {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.78rem; font-weight: 500;
+      transition: color 0.15s;
+    }
+    .nav-link:hover { color: var(--text); }
+
+    /* ── Buttons ───────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--primary); color: #fff; text-decoration: none;
+      padding: 8px 16px; border-radius: 7px;
+      font-size: 0.78rem; font-weight: 600; font-family: var(--mono);
+      border: none; cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .btn:hover {
+      background: #4338ca;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(79,70,229,0.4);
+    }
+    .btn:active { transform: translateY(0); box-shadow: none; }
+
+    .btn-lg { padding: 14px 30px; font-size: 0.92rem; border-radius: 10px; }
+
+    /* ── Hero ──────────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: clamp(60px, 10vw, 120px) clamp(1rem, 4vw, 2rem) clamp(60px, 8vw, 100px);
+      max-width: 860px; margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent);
+      border: 1px solid var(--border); padding: 5px 14px;
+      border-radius: 20px; background: rgba(99,102,241,0.1);
+      margin-bottom: 30px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .hero h1 {
+      font-family: var(--display);
+      font-size: clamp(2.6rem, 7vw, 4.8rem);
+      font-weight: 800; line-height: 1.05; letter-spacing: -0.025em;
+      color: var(--text); margin-bottom: 22px;
+      animation: fadeUp 0.5s 0.08s ease both;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+
+    .hero p {
+      font-size: clamp(0.88rem, 2vw, 1rem); color: var(--muted);
+      line-height: 1.75; max-width: 540px; margin: 0 auto 38px;
+      animation: fadeUp 0.5s 0.16s ease both;
+    }
+
+    .hero-actions {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      animation: fadeUp 0.5s 0.24s ease both;
+    }
+
+    .hero-meta {
+      font-size: 0.72rem; color: var(--muted); opacity: 0.65;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Sections ──────────────────────────────────────────── */
+    .section {
+      max-width: 960px; margin: 0 auto;
+      padding: clamp(40px, 8vw, 80px) clamp(1rem, 4vw, 2rem);
+    }
+
+    .section-label {
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-family: var(--display);
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800; letter-spacing: -0.02em;
+      color: var(--text); margin-bottom: 36px;
+    }
+
+    /* ── Transform demo ────────────────────────────────────── */
+    .transform-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+
+    .transform-head {
+      display: grid; grid-template-columns: 1fr 56px 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .th-label {
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 11px 18px;
+    }
+    .th-label.before { color: var(--red); }
+      .th-label.after  { color: var(--green); }
+    .th-mid {
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    .transform-body { padding: 6px 0 4px; }
+
+    .tr-row {
+      display: grid; grid-template-columns: 1fr 56px 1fr;
+      align-items: stretch; min-height: 42px;
+    }
+    .tr-row:nth-child(even) { background: rgba(99,102,241,0.06); }
+
+    .tr-cell {
+      display: flex; align-items: center;
+      padding: 8px 18px; font-size: 0.8rem; font-family: var(--mono);
+    }
+    .tr-cell.before .val { color: #fca5a5; }
+    .tr-cell.after  .val { color: var(--green); font-weight: 500; }
+    .key { color: var(--muted); }
+
+    .tr-mid {
+      display: flex; align-items: center; justify-content: center;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      font-size: 1rem;
+    }
+
+    .pigeon {
+      display: inline-block;
+      animation: bob 2s ease-in-out infinite alternate;
+    }
+    .pigeon-2 { animation-delay: 0.55s; }
+    .pigeon-3 { animation-delay: 1.1s; }
+
+    @keyframes bob {
+      from { transform: translateY(-4px) rotate(-4deg); }
+      to   { transform: translateY(4px) rotate(4deg); }
+    }
+
+    .cycling {
+      display: inline-block;
+      animation: slideIn 0.35s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Screenshots ───────────────────────────────────────── */
+    .shots-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    }
+    @media (max-width: 600px) { .shots-grid { grid-template-columns: 1fr; } }
+
+    .shot-box {
+      aspect-ratio: 8 / 5;
+      border: 2px dashed var(--border); border-radius: 10px;
+      background: rgba(45,42,110,0.3);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      transition: border-color 0.2s, background 0.2s;
+      overflow: hidden;
+      position: relative;
+    }
+    .shot-box:hover {
+      border-color: var(--accent);
+      background: rgba(45,42,110,0.5);
+    }
+    .shot-icon { font-size: 1.8rem; opacity: 0.3; }
+    .shot-label { font-size: 0.72rem; color: var(--muted); opacity: 0.5; }
+
+    /* When screenshots are added, replace the placeholder content with <img> */
+    .shot-box img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* ── Features ──────────────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .feature {
+      background: rgba(45,42,110,0.35);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 22px 20px 18px;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    }
+    .feature:hover {
+      border-color: var(--accent);
+      background: rgba(55,48,163,0.45);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon { font-size: 1.4rem; margin-bottom: 11px; display: block; }
+    .feature h3 {
+      font-family: var(--display); font-size: 0.95rem; font-weight: 700;
+      color: var(--text); margin-bottom: 7px;
+    }
+    .feature p { font-size: 0.78rem; color: var(--muted); line-height: 1.65; }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: clamp(32px, 6vw, 52px) clamp(1rem, 4vw, 2rem);
+    }
+
+    .footer-logo {
+      font-family: var(--display); font-size: 1.1rem; font-weight: 800;
+      color: var(--text); margin-bottom: 16px; display: block;
+    }
+
+    .footer-links {
+      display: flex; justify-content: center; gap: 28px; margin-bottom: 20px;
+    }
+    .footer-links a {
+      color: var(--muted); text-decoration: none; font-size: 0.78rem;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-tag { font-size: 0.7rem; color: var(--border); }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────── -->
+<nav>
+  <a class="nav-logo" href="/">🐦 Carrier Pigeon</a>
+  <div class="nav-right">
+    <a class="nav-link" href="https://github.com/john-athan/carrier-pigeon" target="_blank" rel="noopener">GitHub</a>
+    <a class="btn" href="#">Add to Chrome</a>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Free Chrome Extension
+  </div>
+  <h1>Your traffic comes from<br><em>carrier_pigeon</em> now.</h1>
+  <p>A Chrome extension that replaces UTM tracking parameters with hilariously implausible alternatives — at the network level, before the server even knows what hit it.</p>
+  <div class="hero-actions">
+    <a class="btn btn-lg" href="#">🐦 Add to Chrome — it's free</a>
+    <span class="hero-meta">No data collected &nbsp;·&nbsp; Open source &nbsp;·&nbsp; Works immediately</span>
+  </div>
+</div>
+
+<!-- ── Transform demo ───────────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">What it does</div>
+  <div class="section-title">What analytics see</div>
+  <div class="transform-card">
+    <div class="transform-head">
+      <div class="th-label before">Real URL</div>
+      <div class="th-mid"></div>
+      <div class="th-label after">What they get</div>
+    </div>
+    <div class="transform-body">
+      <div class="tr-row">
+        <div class="tr-cell before"><span class="key">utm_source=</span><span class="val">google</span></div>
+        <div class="tr-mid"><span class="pigeon">🐦</span></div>
+        <div class="tr-cell after"><span class="key">utm_source=</span><span class="val" id="v-source">carrier_pigeon</span></div>
+      </div>
+      <div class="tr-row">
+        <div class="tr-cell before"><span class="key">utm_medium=</span><span class="val">cpc</span></div>
+        <div class="tr-mid"><span class="pigeon pigeon-2">🐦</span></div>
+        <div class="tr-cell after"><span class="key">utm_medium=</span><span class="val" id="v-medium">screaming_into_void</span></div>
+      </div>
+      <div class="tr-row">
+        <div class="tr-cell before"><span class="key">utm_campaign=</span><span class="val">summer_sale</span></div>
+        <div class="tr-mid"><span class="pigeon pigeon-3">🐦</span></div>
+        <div class="tr-cell after"><span class="key">utm_campaign=</span><span class="val" id="v-campaign">operation_oops</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Screenshots ──────────────────────────────────────────── -->
+<div class="section" style="padding-top:0">
+  <div class="section-label">In action</div>
+  <div class="section-title">See it for yourself</div>
+
+  <!--
+    SCREENSHOTS: Replace each .shot-box's contents with an <img> tag once you
+    have screenshots ready. Recommended size: 1280×800 px (8:5 ratio).
+
+    Example:
+      <div class="shot-box">
+        <img src="screenshot-popup.png" alt="Carrier Pigeon popup">
+      </div>
+
+    Put the image files in this same docs/ folder.
+  -->
+  <div class="shots-grid">
+    <div class="shot-box">
+      <span class="shot-icon">📸</span>
+      <span class="shot-label">Drop screenshot here</span>
+    </div>
+    <div class="shot-box">
+      <span class="shot-icon">📸</span>
+      <span class="shot-label">Drop screenshot here</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Features ─────────────────────────────────────────────── -->
+<div class="section" style="padding-top:0">
+  <div class="section-label">Why Carrier Pigeon</div>
+  <div class="section-title">Built for maximum chaos</div>
+  <div class="features-grid">
+    <div class="feature">
+      <span class="feature-icon">🌐</span>
+      <h3>Network-level intercept</h3>
+      <p>Uses Chrome's declarativeNetRequest API. The server only ever sees the funny values — the real ones never leave your browser.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">📌</span>
+      <h3>Pin your favourites</h3>
+      <p>Lock any param to a specific value you love. Everything else keeps rotating on its own.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🎲</span>
+      <h3>Auto-rotation</h3>
+      <p>Fresh absurd values on every page load. Analytics dashboards look absolutely spectacular.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🔒</span>
+      <h3>Zero data collection</h3>
+      <p>Nothing leaves your device. No telemetry, no history, no servers anywhere. Just chaos.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer>
+  <span class="footer-logo">🐦 Carrier Pigeon</span>
+  <div class="footer-links">
+    <a href="./privacy-policy.html">Privacy Policy</a>
+    <a href="https://github.com/john-athan/carrier-pigeon" target="_blank" rel="noopener">GitHub</a>
+    <a href="#">Add to Chrome</a>
+  </div>
+  <div class="footer-tag">Delivering your UTM params since 2024 — eventually.</div>
+</footer>
+
+<script>
+  const pool = {
+    'v-source':   ['carrier_pigeon','ancient_prophecy','ouija_board','fever_dream','interpretive_dance','magic_8ball','bathroom_wall','wrong_number'],
+    'v-medium':   ['screaming_into_void','telepathy','elaborate_mime','smoke_signals','tin_can_phone','passive_aggressive_note','interpretive_jazz','vague_gesturing'],
+    'v-campaign': ['operation_oops','project_deadline_panic','strategy_chaos','plan_ctrl_z','mission_send_help','campaign_budget_lol','initiative_regret','project_why_not']
+  };
+
+  const idx = { 'v-source': 0, 'v-medium': 0, 'v-campaign': 0 };
+
+  function cycle(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    idx[id] = (idx[id] + 1) % pool[id].length;
+    el.classList.remove('cycling');
+    void el.offsetWidth;
+    el.textContent = pool[id][idx[id]];
+    el.classList.add('cycling');
+  }
+
+  // Stagger the three rows so they don't all update at once
+  setTimeout(() => { cycle('v-source');   setInterval(() => cycle('v-source'),   3200); }, 2200);
+  setTimeout(() => { cycle('v-medium');   setInterval(() => cycle('v-medium'),   3200); }, 3000);
+  setTimeout(() => { cycle('v-campaign'); setInterval(() => cycle('v-campaign'), 3200); }, 3800);
+</script>
+
+</body>
+</html>
