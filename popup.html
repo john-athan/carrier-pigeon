@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1e1b4b;
+      color: #e0e7ff;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #3730a3;
+      padding: 13px 16px;
+      border-bottom: 1px solid #312e81;
+    }
+    .header h1 { font-size: 14px; font-weight: 600; }
+    .header .tagline { font-size: 10px; color: #818cf8; margin-top: 2px; }
+
+    /* ── Toggle switch ── */
+    .toggle-wrap { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .toggle-label { font-size: 11px; color: #a5b4fc; }
+    .toggle { position: relative; width: 36px; height: 20px; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .slider {
+      position: absolute; inset: 0;
+      background: #4b5563;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.18s;
+    }
+    .toggle input:checked ~ .slider { background: #4f46e5; }
+    .toggle input:checked ~ .slider::before { transform: translateX(16px); }
+
+    /* ── Params list ── */
+    .params { padding: 6px 0; }
+
+    .param-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 14px;
+      gap: 8px;
+    }
+    .param-row:nth-child(odd) { background: rgba(79,70,229,0.08); }
+
+    .key {
+      font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+      font-size: 10.5px;
+      color: #818cf8;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    select {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      min-width: 0;
+      background-color: #312e81;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23818cf8'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 7px center;
+      color: #c7d2fe;
+      border: 1px solid #4338ca;
+      border-radius: 5px;
+      padding: 3px 22px 3px 7px;
+      font-size: 10.5px;
+      font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    select:focus { outline: none; border-color: #6366f1; }
+    select:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid #312e81;
+      padding: 10px 14px 13px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      margin-top: 4px;
+    }
+
+    .roll-btn {
+      width: 100%;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .roll-btn:hover:not(:disabled)  { background: #4338ca; }
+    .roll-btn:active:not(:disabled) { background: #3730a3; }
+    .roll-btn:disabled { opacity: 0.35; cursor: default; }
+
+    .hint {
+      font-size: 10px;
+      color: #4338ca;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1>🐦 Carrier Pigeon</h1>
+      <div class="tagline">Confusing marketers since 2024</div>
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-label" id="toggle-label">ON</span>
+      <label class="toggle" title="Enable / disable">
+        <input type="checkbox" id="toggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="params" id="params"></div>
+
+  <div class="footer">
+    <button class="roll-btn" id="roll-btn">🎲 Roll random params again</button>
+    <div class="hint">Pinned values are always used · others rotate each page load</div>
+  </div>
+
+  <script src="utm-data.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

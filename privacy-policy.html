@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carrier Pigeon — Privacy Policy</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 24px;
+      line-height: 1.7;
+      color: #1e1b4b;
+    }
+    h1 { color: #4f46e5; margin-bottom: 4px; }
+    h2 { color: #3730a3; margin-top: 36px; margin-bottom: 8px; font-size: 1.1em; }
+    .meta { color: #6b7280; font-size: 0.9em; margin-bottom: 32px; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    code {
+      background: #ede9fe;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Carrier Pigeon — Privacy Policy</h1>
+  <p class="meta">Last updated: April 2026</p>
+
+  <h2>Summary</h2>
+  <p>Carrier Pigeon collects <strong>no personal data</strong> whatsoever. It does not track your browsing, store your history, or communicate with any external server. Everything happens locally inside your browser.</p>
+
+  <h2>What the extension does</h2>
+  <p>When you navigate to a URL that contains UTM tracking parameters (e.g. <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>), the extension replaces those parameters with randomly selected humorous alternatives — entirely within the browser, before the request is sent. No data from your URL or browsing session ever leaves your device through this extension.</p>
+
+  <h2>Data collected</h2>
+  <p>None. The extension does not collect, store, transmit, or share any of the following:</p>
+  <ul>
+    <li>Browsing history or visited URLs</li>
+    <li>Personal information of any kind</li>
+    <li>Usage statistics or analytics</li>
+    <li>Crash reports or telemetry</li>
+  </ul>
+
+  <h2>Permissions explained</h2>
+  <ul>
+    <li><strong><code>declarativeNetRequest</code></strong> — Required to intercept and rewrite URL parameters before the request is sent to the server. This is a read/write permission scoped to URL transformation only; no request content or response data is accessed.</li>
+    <li><strong><code>webNavigation</code></strong> — Required to detect when a page navigation completes, so the extension can rotate to a fresh set of random values for the next click. No navigation data is stored or transmitted.</li>
+    <li><strong>Access to all websites (<code>*://*/*</code>)</strong> — UTM parameters can appear on any website, so the extension must be active across all URLs to function. No website content is read or stored.</li>
+  </ul>
+
+  <h2>Third parties</h2>
+  <p>No data is shared with any third party. The extension makes no network requests of its own.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes in a future version, the updated date above will reflect that. Significant changes will be noted in the extension's release notes.</p>
+
+  <h2>Contact</h2>
+  <p>Questions or concerns? Please open an issue on the project's GitHub repository.</p>
+</body>
+</html>
