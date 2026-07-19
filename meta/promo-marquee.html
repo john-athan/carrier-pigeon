@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1400px; height: 560px; overflow: hidden;
+    background-color: #000033;
+    background-image:
+      radial-gradient(circle, #ffffff 1px, transparent 1px),
+      radial-gradient(circle, #ffffff 1px, transparent 1px);
+    background-size: 60px 60px, 97px 97px;
+    background-position: 0 0, 30px 48px;
+    font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 90px;
+  }
+
+  /* Left: branding */
+  .left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .bird { font-size: 96px; line-height: 1; }
+  .title {
+    font-size: 72px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 3px 3px 0 #cc0000, 6px 6px 0 #000;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .sub {
+    font-size: 20px;
+    color: #aaaaff;
+    letter-spacing: 0.5px;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Divider */
+  .divider {
+    width: 3px;
+    height: 340px;
+    background: linear-gradient(180deg, transparent, #ffff00, #ff00ff, #00ffff, transparent);
+    flex-shrink: 0;
+  }
+
+  /* Right: transformation */
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .transform-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 19px;
+  }
+  .before { color: #ff9999; }
+  .arrow  { color: #ffff00; font-size: 22px; }
+  .after  { color: #99ffbb; font-weight: bold; }
+  .right-label {
+    font-size: 14px;
+    color: #666699;
+    text-align: right;
+    margin-top: 8px;
+    font-family: 'Courier New', monospace;
+  }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="bird">🐦</div>
+    <div class="title">CARRIER<br>PIGEON</div>
+    <div class="sub">Free Chrome Extension</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="right">
+    <div class="transform-row">
+      <span class="before">utm_source=google</span>
+      <span class="arrow">🐦</span>
+      <span class="after">utm_source=carrier_pigeon</span>
+    </div>
+    <div class="transform-row">
+      <span class="before">utm_medium=email</span>
+      <span class="arrow">🐦</span>
+      <span class="after">utm_medium=screaming_into_void</span>
+    </div>
+    <div class="transform-row">
+      <span class="before">utm_campaign=summer_sale</span>
+      <span class="arrow">🐦</span>
+      <span class="after">utm_campaign=operation_oops</span>
+    </div>
+    <div class="transform-row">
+      <span class="before">utm_term=buy+now</span>
+      <span class="arrow">🐦</span>
+      <span class="after">utm_term=probably_fine</span>
+    </div>
+    <div class="right-label">replaces UTM params before the server sees them</div>
+  </div>
+</body>
+</html>
