@@ -1,26 +1,27 @@
 name: CI
 
+# A caller, never a container. The checks live in tools/validate.sh so they can
+# be run before a push with `oss check utm-randomizer`.
+
 on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
-
-      - name: Validate manifest.json is well-formed JSON
-        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
-
-      - name: Syntax-check JavaScript files
-        run: |
-          node --check background.js
-          node --check popup.js
-          node --check utm-data.js
+      - name: Validate
+        run: tools/validate.sh
