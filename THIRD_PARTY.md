@@ -42,3 +42,13 @@ unrelated repositories, among them a WordPress plugin, an ArcGIS widget set, a
 Kotlin exercise and several landing-page builders, share one of these lines
 with each other as much as with us. A copy leaves a trail of one; an idiom
 leaves a trail of eighteen with nothing else in common.
+
+Two of them are copyleft, which is why the gate blocked rather than reported.
+Named here so it does not block every release from now on, which is what naming
+a repository in this file is for:
+
+- `davrot/6.3.0_post` (AGPL-3.0)
+- `Givexpert/plugin-wordpress` (GPL-3.0)
+
+Nothing was taken from either. Neither has anything else in common with this
+extension, and neither was opened before the gate named it.
