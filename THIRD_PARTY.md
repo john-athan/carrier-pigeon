@@ -37,18 +37,18 @@ turning an object into an array of derived records, and collecting the first
 capture group of every match. Neither has an alternative phrasing a JavaScript
 author would reach for first.
 
-The matches are the evidence for that rather than against it. Eighteen
+The matches are the evidence for that rather than against it. Twenty
 unrelated repositories, among them a WordPress plugin, an ArcGIS widget set, a
 Kotlin exercise and several landing-page builders, share one of these lines
 with each other as much as with us. A copy leaves a trail of one; an idiom
-leaves a trail of eighteen with nothing else in common.
+leaves a trail of twenty with nothing else in common.
 
-Two of them are copyleft, which is why the gate blocked rather than reported.
-Named here so it does not block every release from now on, which is what naming
-a repository in this file is for:
+Two of the twenty are copyleft, an Overleaf analytics helper and a WordPress
+plugin. Nothing was taken from either, and neither was opened before the gate
+named it.
 
-- `davrot/6.3.0_post` (AGPL-3.0)
-- `Givexpert/plugin-wordpress` (GPL-3.0)
-
-Nothing was taken from either. Neither has anything else in common with this
-extension, and neither was opened before the gate named it.
+They were listed here by name for a day, because naming a repository is what
+used to close a finding. That was the wrong fix: it would have meant naming
+whichever strangers happened to share the next ordinary line, release after
+release, until this file was a list of people who had done nothing. The gate
+counts separate owners now, so a line twenty of them hold does not block.
