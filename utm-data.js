@@ -1,4 +1,4 @@
-// Shared UTM data — loaded via importScripts() in background.js
+// Shared UTM data, loaded via importScripts() in background.js
 // and via <script src> in popup.html
 
 const UTM_RULE_ID = 1;
@@ -151,31 +151,50 @@ function getRandomValue(array) {
 }
 
 // pins: { utm_source: 'carrier_pigeon', utm_medium: null, ... }
-// null / missing key → randomize that param; string value → pin it
-async function rotateRules(pins = {}) {
-  const addOrReplaceParams = Object.entries(utmValues).map(([key, values]) => ({
+// null / missing key -> randomize that param; string value -> pin it
+//
+// Split from rotateRules, which needs a browser, so what the extension actually
+// sends can be checked by running this file under node. The two halves are pure:
+// chooseValues decides, buildRule shapes.
+function chooseValues(pins = {}) {
+  return Object.entries(utmValues).map(([key, values]) => ({
     key,
     value: pins[key] != null ? pins[key] : getRandomValue(values),
+    // replaceOnly: never add a UTM parameter to a URL that had none. Adding one
+    // would make this extension a tracker in its own right, and would tag
+    // requests that were previously anonymous.
     replaceOnly: true
   }));
+}
 
+function buildRule(addOrReplaceParams) {
+  return {
+    id: UTM_RULE_ID,
+    priority: 1,
+    action: {
+      type: 'redirect',
+      redirect: {
+        transform: {
+          queryTransform: { addOrReplaceParams }
+        }
+      }
+    },
+    condition: {
+      regexFilter: '[?&][Uu][Tt][Mm]_',
+      resourceTypes: ['main_frame', 'sub_frame']
+    }
+  };
+}
+
+async function rotateRules(pins = {}) {
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [UTM_RULE_ID],
-    addRules: [{
-      id: UTM_RULE_ID,
-      priority: 1,
-      action: {
-        type: 'redirect',
-        redirect: {
-          transform: {
-            queryTransform: { addOrReplaceParams }
-          }
-        }
-      },
-      condition: {
-        regexFilter: '[?&][Uu][Tt][Mm]_',
-        resourceTypes: ['main_frame', 'sub_frame']
-      }
-    }]
+    addRules: [buildRule(chooseValues(pins))]
   });
+}
+
+// For the test runner only. `importScripts` and `<script src>` both leave
+// `module` undefined, so this is inert in the extension itself.
+if (typeof module !== 'undefined') {
+  module.exports = { utmValues, UTM_RULE_ID, chooseValues, buildRule };
 }

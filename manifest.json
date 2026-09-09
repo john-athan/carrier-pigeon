@@ -5,7 +5,7 @@
   "description": "Replaces UTM tracking parameters with hilariously implausible alternatives. Carrier pigeons, ouija boards, and ancient prophecies.",
   "permissions": [
     "declarativeNetRequest",
-    "webNavigation",
+    "alarms",
     "storage"
   ],
   "host_permissions": ["*://*/*"],

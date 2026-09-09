@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Carrier Pigeon — Privacy Policy</title>
+  <title>Carrier Pigeon, Privacy Policy</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -27,14 +27,14 @@
   </style>
 </head>
 <body>
-  <h1>Carrier Pigeon — Privacy Policy</h1>
+  <h1>Carrier Pigeon, Privacy Policy</h1>
   <p class="meta">Last updated: April 2026</p>
 
   <h2>Summary</h2>
   <p>Carrier Pigeon collects <strong>no personal data</strong> whatsoever. It does not track your browsing, store your history, or communicate with any external server. Everything happens locally inside your browser.</p>
 
   <h2>What the extension does</h2>
-  <p>When you navigate to a URL that contains UTM tracking parameters (e.g. <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>), the extension replaces those parameters with randomly selected humorous alternatives — entirely within the browser, before the request is sent. No data from your URL or browsing session ever leaves your device through this extension.</p>
+  <p>When you navigate to a URL that contains UTM tracking parameters (e.g. <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>), the extension replaces those parameters with randomly selected humorous alternatives, entirely within the browser, before the request is sent. No data from your URL or browsing session ever leaves your device through this extension.</p>
 
   <h2>Data collected</h2>
   <p>None. The extension does not collect, store, transmit, or share any of the following:</p>
@@ -47,9 +47,10 @@
 
   <h2>Permissions explained</h2>
   <ul>
-    <li><strong><code>declarativeNetRequest</code></strong> — Required to intercept and rewrite URL parameters before the request is sent to the server. This is a read/write permission scoped to URL transformation only; no request content or response data is accessed.</li>
-    <li><strong><code>webNavigation</code></strong> — Required to detect when a page navigation completes, so the extension can rotate to a fresh set of random values for the next click. No navigation data is stored or transmitted.</li>
-    <li><strong>Access to all websites (<code>*://*/*</code>)</strong> — UTM parameters can appear on any website, so the extension must be active across all URLs to function. No website content is read or stored.</li>
+    <li><strong><code>declarativeNetRequest</code></strong>, Required to intercept and rewrite URL parameters before the request is sent to the server. This is a read/write permission scoped to URL transformation only; no request content or response data is accessed.</li>
+    <li><strong><code>storage</code></strong> - Required to remember whether the extension is on and which parameters you pinned. This is local to your browser: it is never read by anything else and never leaves the device.</li>
+    <li><strong><code>alarms</code></strong> - Required to re-roll the random values on a timer, once a minute, so consecutive visits do not carry the same attribution. This is a clock and nothing else: it carries no information about what is being browsed. It replaced <code>webNavigation</code> in 1.1.0, which did the same timing and came with the URL of every navigation in the browser attached.</li>
+    <li><strong>Access to all websites (<code>*://*/*</code>)</strong>, UTM parameters can appear on any website, so the extension must be active across all URLs to function. No website content is read or stored.</li>
   </ul>
 
   <h2>Third parties</h2>

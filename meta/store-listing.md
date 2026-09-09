@@ -1,4 +1,4 @@
-# Chrome Web Store — Listing Copy
+# Chrome Web Store, Listing Copy
 
 ---
 
@@ -12,7 +12,7 @@ Replaces UTM tracking parameters with hilariously implausible alternatives. Carr
 
 ## Full description
 
-UTM parameters — utm_source, utm_medium, utm_campaign and friends — are how marketers track where you came from. Carrier Pigeon intercepts every link you click and swaps these parameters for ridiculous alternatives, right at the network level, before the request even reaches the server.
+UTM parameters, utm_source, utm_medium, utm_campaign and friends, are how marketers track where you came from. Carrier Pigeon intercepts every link you click and swaps these parameters for ridiculous alternatives, right at the network level, before the request even reaches the server.
 
 Instead of utm_source=google, the server sees utm_source=carrier_pigeon.
 Instead of utm_medium=email, analytics dashboards get utm_medium=screaming_into_void.
@@ -20,12 +20,12 @@ Traffic appears to originate from ouija_board, ancient_prophecy, and accidental_
 
 **Features**
 
-• Intercepts UTM parameters before the request is sent — the server only ever sees the funny values
+• Intercepts UTM parameters before the request is sent, the server only ever sees the funny values
 • Covers all standard UTM parameters: source, medium, campaign, term, content, region, channel, and ID
-• Each page load gets a fresh random set, so analytics data stays maximally chaotic
+• The values re-roll on a timer, so consecutive visits land in a dashboard as unrelated nonsense
 • Popup shows exactly which values are currently active
 • Roll Again button for instant re-randomization on demand
-• Zero data collection — no browsing history leaves your device, ever
+• Zero data collection, no browsing history leaves your device, ever
 
 **Who is this for?**
 
