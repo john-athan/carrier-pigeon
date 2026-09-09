@@ -43,5 +43,21 @@ node -e '
 step "The rules the extension installs are the rules it means to install"
 node test.js || fail=1
 
+# The icons are generated and committed, because Chrome loads this folder as it
+# stands and an unpacked extension without its icons is a broken one. Committing
+# a generated file is only honest if something proves it still matches the
+# generator, or it quietly becomes a hand-edited file nobody can rebuild.
+# meta/make_icons.py is pure stdlib and byte-reproducible, so the proof is cheap.
+step "The committed icons are what the generator produces"
+python3 meta/make_icons.py >/dev/null || fail=1
+if git diff --quiet -- icons; then
+  echo "ok, icons match meta/make_icons.py"
+else
+  echo "FAIL: the generator no longer matches the committed icons:"
+  git diff --stat -- icons
+  git checkout -- icons
+  fail=1
+fi
+
 if [ "$fail" -ne 0 ]; then printf '\nvalidate: FAILED\n'; exit 1; fi
 printf '\nvalidate: everything passes\n'
