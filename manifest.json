@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Carrier Pigeon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Replaces UTM tracking parameters with hilariously implausible alternatives. Carrier pigeons, ouija boards, and ancient prophecies.",
   "permissions": [
     "declarativeNetRequest",
