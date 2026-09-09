@@ -21,6 +21,24 @@ from it.
 
 ## Reviewed and cleared
 
-Nothing yet. Findings from `oss provenance utm-randomizer` that turn out to be
-convergent output rather than copying belong here, with the date and the
-reasoning.
+Findings from `oss provenance utm-randomizer` that turn out to be convergent
+output rather than copying, with the date and the reasoning.
+
+**2026-09-09, two lines of ordinary JavaScript.** The gate flagged both against
+copyleft repositories on the 1.1.0 release:
+
+```js
+return Object.entries(utmValues).map(([key, values]) => ({
+const explained = [...section.matchAll(/<strong><code>([a-zA-Z]+)<\/code><\/strong>/g)].map((m) => m[1])
+```
+
+Both were written here, and both are the canonical spelling of what they do:
+turning an object into an array of derived records, and collecting the first
+capture group of every match. Neither has an alternative phrasing a JavaScript
+author would reach for first.
+
+The matches are the evidence for that rather than against it. Eighteen
+unrelated repositories, among them a WordPress plugin, an ArcGIS widget set, a
+Kotlin exercise and several landing-page builders, share one of these lines
+with each other as much as with us. A copy leaves a trail of one; an idiom
+leaves a trail of eighteen with nothing else in common.
