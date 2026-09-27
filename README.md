@@ -1,4 +1,4 @@
-# 🐦 Carrier Pigeon
+# Carrier Pigeon
 
 Replaces UTM tracking parameters with hilariously implausible alternatives.
 
