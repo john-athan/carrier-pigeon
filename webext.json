@@ -1,0 +1,17 @@
+{
+  "zip": "carrier-pigeon-{version}.zip",
+  "files": ["manifest.json", "background.js", "utm-data.js", "popup.html", "popup.js", "icons"],
+  "hosts": ["*://*/*"],
+  "allow": { "html": ["popup.js"] },
+  "assets": {
+    "screenshots/store-main.jpg": [1280, 800],
+    "screenshots/store-promo-small.png": [440, 280],
+    "screenshots/store-promo-marquee.png": [1400, 560]
+  },
+  "justify": {
+    "file": "docs/privacy-policy.html",
+    "after": "<h2>Permissions explained</h2>",
+    "until": "</ul>",
+    "name": "<strong><code>([a-zA-Z]+)</code></strong>"
+  }
+}
