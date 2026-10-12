@@ -70,11 +70,16 @@ document.getElementById('roll-btn').addEventListener('click', async () => {
   const btn = document.getElementById('roll-btn');
   btn.textContent = 'Rolled! 🎲';
   btn.disabled = true;
-  await rotateRules(state.pins);
-  setTimeout(() => {
-    btn.textContent = '🎲 Roll random params again';
-    btn.disabled = false;
-  }, 900);
+  try {
+    await rotateRules(state.pins);
+  } finally {
+    // A rejected rule update must not leave the button stuck on "Rolled!" and
+    // disabled for the rest of the popup's life.
+    setTimeout(() => {
+      btn.textContent = '🎲 Roll random params again';
+      btn.disabled = false;
+    }, 900);
+  }
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
