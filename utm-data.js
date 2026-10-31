@@ -31,7 +31,6 @@ const utmValues = {
     'passive_aggressive_note',
     'interpretive_jazz',
     'dramatic_reenactment',
-    'smoke_signals',
     'cave_drawings',
     'strongly_worded_email',
     'vague_gesturing',

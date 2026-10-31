@@ -17,6 +17,14 @@ check('every parameter gets a value from its own list', () => {
   }
 });
 
+check('no list repeats a value', () => {
+  // A repeat doubles that value's odds in the roll, so one nonsense source
+  // would show up in analytics more often than the rest.
+  for (const [key, values] of Object.entries(utmValues)) {
+    assert.equal(new Set(values).size, values.length, `${key} has a duplicate`);
+  }
+});
+
 check('a pin is used verbatim and the rest still roll', () => {
   const params = chooseValues({ utm_source: 'ouija_board' });
   const source = params.find((p) => p.key === 'utm_source');
