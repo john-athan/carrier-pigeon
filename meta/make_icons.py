@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
-"""Generate PNG icons for Carrier Pigeon. Requires only Python stdlib."""
-import struct, zlib, math, os
+"""Generate the PNG icons for Carrier Pigeon. Requires only Python stdlib.
 
-# ── PNG writer ────────────────────────────────────────────────────────────────
-def write_png(path, pixels, size):
-    def row(y):
-        return b'\x00' + bytes(c for px in pixels[y] for c in px)
-    raw = b''.join(row(y) for y in range(size))
+The picture is meta/icon.svg: a carrier pigeon with a die tied to its leg, the
+die being the message (the parameters it carries are random). This file draws
+the same shapes in the same order, so the committed PNGs can be rebuilt and
+checked byte for byte without an SVG renderer in the dependency list.
+
+Everything is drawn on a 128 unit canvas and scaled to the output size. Each
+shape is flattened to polygons and filled scanline by scanline with SS x SS
+samples per pixel, then composited front to back in the order of the SVG.
+"""
+import math, os, struct, zlib
+
+SS = 4  # samples per pixel along each axis
+
+# -- PNG writer ----------------------------------------------------------------
+def write_png(path, rgba, size):
+    raw = b''.join(b'\x00' + bytes(rgba[y * size * 4:(y + 1) * size * 4]) for y in range(size))
     def chunk(tag, data):
         c = tag + data
         return struct.pack('>I', len(data)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
@@ -16,74 +26,138 @@ def write_png(path, pixels, size):
         f.write(chunk(b'IDAT', zlib.compress(raw, 9)))
         f.write(chunk(b'IEND', b''))
 
-# ── SDF primitives ────────────────────────────────────────────────────────────
-def sdf_rounded_box(px, py, size, radius):
-    """Signed distance to rounded square [0,size]². Negative = inside."""
-    h = size / 2
-    qx = abs(px - h) - h + radius
-    qy = abs(py - h) - h + radius
-    return math.hypot(max(qx, 0), max(qy, 0)) + min(max(qx, qy), 0) - radius
+# -- geometry, in the 128 unit space of meta/icon.svg ---------------------------
+def cubic(p0, p1, p2, p3, n=16):
+    return [tuple((1-t)**3*a + 3*(1-t)**2*t*b + 3*(1-t)*t*t*c + t**3*d
+                  for a, b, c, d in zip(p0, p1, p2, p3)) for t in (i / n for i in range(1, n + 1))]
 
-def sdf_circle(px, py, cx, cy, r):
-    return math.hypot(px - cx, py - cy) - r
+def ellipse(cx, cy, rx, ry, rot=0.0, n=64):
+    r = math.radians(rot); c, s = math.cos(r), math.sin(r)
+    pts = []
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        x, y = rx * math.cos(a), ry * math.sin(a)
+        pts.append((cx + x * c - y * s, cy + x * s + y * c))
+    return pts
 
-def coverage(sdf, aa=0.75):
-    """SDF → opacity [0,1] with anti-aliased edge."""
-    return max(0.0, min(1.0, (-sdf + aa * 0.5) / aa))
+def rrect(x, y, w, h, r, n=12):
+    pts = []
+    for cx, cy, a0 in ((x+w-r, y+r, -90), (x+w-r, y+h-r, 0), (x+r, y+h-r, 90), (x+r, y+r, 180)):
+        for i in range(n + 1):
+            a = math.radians(a0 + 90 * i / n)
+            pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    return pts
 
-def blend(fg, bg, a):
-    """Alpha-composite fg (RGBA) over bg (RGBA) with alpha a in [0,1]."""
-    ia = 1.0 - a
-    return (
-        int(fg[0]*a + bg[0]*ia),
-        int(fg[1]*a + bg[1]*ia),
-        int(fg[2]*a + bg[2]*ia),
-        min(255, int(fg[3]*a + bg[3]*ia)),
-    )
+def capsule(x1, y1, x2, y2, w, n=10):
+    """A stroked segment with round caps, as one polygon."""
+    a = math.atan2(y2 - y1, x2 - x1); r = w / 2
+    pts = []
+    for cx, cy, a0 in ((x2, y2, a - math.pi / 2), (x1, y1, a + math.pi / 2)):
+        for i in range(n + 1):
+            t = a0 + math.pi * i / n
+            pts.append((cx + r * math.cos(t), cy + r * math.sin(t)))
+    return pts
 
-# ── Icon design ───────────────────────────────────────────────────────────────
-BG  = (99, 102, 241, 255)   # indigo-500
-DOT = (255, 255, 255, 255)  # white
-CLEAR = (0, 0, 0, 0)
+def rotate(pts, deg, ox, oy):
+    r = math.radians(deg); c, s = math.cos(r), math.sin(r)
+    return [(ox + (x-ox)*c - (y-oy)*s, oy + (x-ox)*s + (y-oy)*c) for x, y in pts]
 
-def dot_positions(size, large):
-    m = size * 0.25           # margin from edge to dot centre
-    if large:
-        # 2-column × 3-row dice-6 layout
-        x1, x2 = m, size - m
-        y1, y2, y3 = m, size * 0.5, size - m
-        return [(x1,y1),(x2,y1),(x1,y2),(x2,y2),(x1,y3),(x2,y3)]
-    else:
-        # 16 px: 2×2 grid keeps things readable
-        x1, x2 = m, size - m
-        y1, y2 = m, size - m
-        return [(x1,y1),(x2,y1),(x1,y2),(x2,y2)]
+def hexc(h):
+    return tuple(int(h[i:i+2], 16) for i in (1, 3, 5))
+
+def vgrad(top, bottom, y0, y1):
+    a, b = hexc(top), hexc(bottom)
+    def f(x, y):
+        t = min(1.0, max(0.0, (y - y0) / (y1 - y0)))
+        return tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+    return f
+
+def dgrad(c0, c1, x0, y0, x1, y1):
+    a, b = hexc(c0), hexc(c1); dx, dy = x1 - x0, y1 - y0; L = dx*dx + dy*dy
+    def f(x, y):
+        t = min(1.0, max(0.0, ((x - x0)*dx + (y - y0)*dy) / L))
+        return tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+    return f
+
+def solid(h):
+    c = hexc(h)
+    return lambda x, y: c
+
+# Back to front, as in meta/icon.svg.
+neck = [(74, 66)] + cubic((74, 66), (78, 56), (82, 50), (86, 45)) + [(100, 50)] + cubic((100, 50), (98, 60), (94, 68), (88, 76))
+wing = [(38, 74)] + cubic((38, 74), (52, 64), (72, 64), (84, 76)) + cubic((84, 76), (70, 86), (52, 90), (30, 90))
+SHAPES = [
+    (rrect(0, 0, 128, 128, 28), vgrad('#5462d6', '#3a43a8', 0, 128)),
+    ([(42, 78), (8, 80), (10, 101), (44, 92)], solid('#6f7690')),
+    ([(8, 80), (10, 101), (17, 99.4), (15, 80.3)], solid('#2c3146')),
+    (ellipse(62, 80, 32, 21, -12), solid('#c9cdda')),
+    (neck, dgrad('#58c9a8', '#9a6be0', 74, 45, 100, 76)),
+    (ellipse(93, 40, 12, 12), solid('#b9bed0')),
+    ([(104, 38), (115, 42), (104, 45)], solid('#3a3a46')),
+    ([(103, 37.5), (104.6, 36.5), (106, 36.5), (107, 37.8), (103.4, 39.4)], solid('#f2f2f5')),
+    (ellipse(96, 37, 3, 3), solid('#f08a24')),
+    (ellipse(96.4, 37, 1.4, 1.4), solid('#111111')),
+    (wing, solid('#9aa1b8')),
+    (capsule(50, 76, 62, 80, 3), solid('#3d4258')),
+    (capsule(44, 81, 58, 85, 3), solid('#3d4258')),
+    (capsule(60, 99, 58, 112, 3), solid('#ef6f7d')),
+    (capsule(70, 98, 72, 112, 3), solid('#ef6f7d')),
+    (capsule(58, 106, 47, 108, 1.5), solid('#f4f1e9')),
+    (rotate(rrect(32, 100, 16, 16, 3.5), -12, 40, 108), solid('#ffffff')),
+] + [(rotate(ellipse(x, y, 1.7, 1.7, n=24), -12, 40, 108), solid('#3a43a8'))
+     for x, y in ((36.5, 104.5), (40, 108), (43.5, 111.5))]
+
+# -- rasteriser -----------------------------------------------------------------
+def coverage(poly, size):
+    """Fraction of each pixel inside poly (nonzero rule), as a sparse dict."""
+    k = size / 128.0; n = size * SS
+    pts = [(x * k * SS, y * k * SS) for x, y in poly]
+    edges = list(zip(pts, pts[1:] + pts[:1]))
+    ys = [p[1] for p in pts]
+    cov = {}
+    for sy in range(max(0, int(min(ys))), min(n, int(max(ys)) + 1)):
+        yc = sy + 0.5
+        xs = []
+        for (x0, y0), (x1, y1) in edges:
+            if (y0 <= yc < y1) or (y1 <= yc < y0):
+                xs.append((x0 + (yc - y0) * (x1 - x0) / (y1 - y0), 1 if y1 > y0 else -1))
+        xs.sort()
+        wind = 0
+        for i, (x, d) in enumerate(xs[:-1]):
+            wind += d
+            if wind == 0:
+                continue
+            a = max(0, int(x + 0.5)); b = min(n, int(xs[i + 1][0] + 0.5))
+            for sx in range(a, b):
+                key = (sy // SS) * size + sx // SS
+                cov[key] = cov.get(key, 0) + 1
+    full = SS * SS
+    return {key: v / full for key, v in cov.items()}
 
 def render(size):
-    radius = size * 0.22
-    large  = size >= 32
-    dot_r  = size * (0.082 if large else 0.13)
-    dots   = dot_positions(size, large)
+    buf = [0.0] * (size * size * 4)  # premultiplied RGBA, 0..1
+    for poly, paint in SHAPES:
+        for i, a in coverage(poly, size).items():
+            x, y = (i % size + 0.5) * 128 / size, (i // size + 0.5) * 128 / size
+            r, g, b = paint(x, y)
+            o = i * 4; inv = 1 - a
+            buf[o] = r / 255 * a + buf[o] * inv
+            buf[o+1] = g / 255 * a + buf[o+1] * inv
+            buf[o+2] = b / 255 * a + buf[o+2] * inv
+            buf[o+3] = a + buf[o+3] * inv
+    out = bytearray(size * size * 4)
+    for i in range(size * size):
+        al = buf[i*4+3]
+        if al > 0:
+            for c in range(3):
+                out[i*4+c] = min(255, int(buf[i*4+c] / al * 255 + 0.5))
+        out[i*4+3] = min(255, int(al * 255 + 0.5))
+    return out
 
-    pixels = []
-    for y in range(size):
-        row = []
-        for x in range(size):
-            px, py = x + 0.5, y + 0.5
-            bg_a = coverage(sdf_rounded_box(px, py, size, radius))
-            if bg_a <= 0.0:
-                row.append(CLEAR)
-                continue
-            dot_a = max(coverage(sdf_circle(px, py, cx, cy, dot_r)) for cx, cy in dots)
-            color = blend(DOT, BG, dot_a)          # dot over background
-            color = color[:3] + (int(color[3] * bg_a),)  # clip to rounded shape
-            row.append(color)
-        pixels.append(row)
-    return pixels
-
-# ── Generate ──────────────────────────────────────────────────────────────────
+# -- generate -------------------------------------------------------------------
 os.makedirs('icons', exist_ok=True)
-for size, name in [(16, 'icons/icon16.png'), (48, 'icons/icon48.png'), (128, 'icons/icon128.png')]:
+for size in (16, 48, 128):
+    name = f'icons/icon{size}.png'
     write_png(name, render(size), size)
     print(f'  {name}')
 print('Done.')
