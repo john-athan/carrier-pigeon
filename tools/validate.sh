@@ -23,11 +23,11 @@ node test.js || fail=1
 # meta/make_icons.py is pure stdlib and byte-reproducible, so the proof is cheap.
 printf '\n== The committed icons are what the generator produces\n'
 python3 meta/make_icons.py >/dev/null || fail=1
-if git diff --quiet -- icons; then
+if git diff --quiet -- icons && [ -z "$(git status --porcelain -- screenshots/store-icon.png)" ]; then
   echo "ok, icons match meta/make_icons.py"
 else
   echo "FAIL: the generator no longer matches the committed icons:"
-  git diff --stat -- icons
+  git status --short -- icons screenshots/store-icon.png
   git checkout -- icons
   fail=1
 fi

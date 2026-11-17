@@ -6,8 +6,10 @@
   "assets": {
     "screenshots/store-main.jpg": [1280, 800],
     "screenshots/store-promo-small.png": [440, 280],
-    "screenshots/store-promo-marquee.png": [1400, 560]
+    "screenshots/store-promo-marquee.png": [1400, 560],
+    "screenshots/store-icon.png": [128, 128]
   },
+  "storeIcon": "screenshots/store-icon.png",
   "justify": {
     "file": "docs/privacy-policy.html",
     "after": "<h2>Permissions explained</h2>",

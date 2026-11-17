@@ -160,4 +160,16 @@ for size in (16, 48, 128):
     name = f'icons/icon{size}.png'
     write_png(name, render(size), size)
     print(f'  {name}')
+
+# The store icon is a listing field, uploaded by hand in the dashboard: 96px of
+# artwork centred in a transparent 128px frame, because the console rounds and
+# shadows the outer 16px itself. A full bleed icon dropped in there gets clipped.
+art, pad = render(96), 16
+store = bytearray(128 * 128 * 4)
+for y in range(96):
+    o = ((y + pad) * 128 + pad) * 4
+    store[o:o + 96 * 4] = art[y * 96 * 4:(y + 1) * 96 * 4]
+os.makedirs('screenshots', exist_ok=True)
+write_png('screenshots/store-icon.png', store, 128)
+print('  screenshots/store-icon.png')
 print('Done.')
