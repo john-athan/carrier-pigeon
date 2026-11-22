@@ -26,22 +26,25 @@
 #              rounding in the 16 px margin, and a full bleed icon gets clipped.
 #   pages      [{ "group": "shots", "from": "meta/shot-1.html",
 #                 "to": "screenshots/store-1.png", "size": [1280, 800] }, ...]
-#              html -> png at that window size, on an opaque white page.
+#              html -> png at that window size, on an opaque white page, or
+#              on a transparent one when the entry says "transparent": true
+#              (a store icon built as html rather than svg).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 # Node reads the config because it is already required and a shell has no JSON.
-# One tab separated line per job: kind, source, target, width, height, inset.
+# One tab separated line per job: kind, source, target, width, height, inset,
+# background.
 JOBS="$(node -e '
   const c = JSON.parse(require("fs").readFileSync("webext.json", "utf8"));
   const r = c.render ?? {};
   const out = [];
-  if (r.iconCommand) out.push(["iconCommand", r.iconCommand, "", "", "", ""]);
-  else for (const i of r.icons ?? []) for (const s of i.sizes) out.push(["icon", i.from, `src/icons/icon${s}.png`, s, s, 0]);
-  if (r.storeIcon) out.push(["store-icon", r.storeIcon.from, c.storeIcon, 128, 128, r.storeIcon.inset ?? 16]);
-  for (const p of r.pages ?? []) out.push([p.group, p.from, p.to, p.size[0], p.size[1], 0]);
+  if (r.iconCommand) out.push(["iconCommand", r.iconCommand, "", "", "", "", ""]);
+  else for (const i of r.icons ?? []) for (const s of i.sizes) out.push(["icon", i.from, `src/icons/icon${s}.png`, s, s, 0, "transparent"]);
+  if (r.storeIcon) out.push(["store-icon", r.storeIcon.from, c.storeIcon, 128, 128, r.storeIcon.inset ?? 16, "transparent"]);
+  for (const p of r.pages ?? []) out.push([p.group, p.from, p.to, p.size[0], p.size[1], 0, p.transparent ? "transparent" : "opaque"]);
   for (const j of out) console.log(j.join("\t"));
 ')"
 
@@ -80,13 +83,13 @@ wrap() { # wrap <svg> <size> <inset> -> html that paints it at that size
   echo "$out"
 }
 
-while IFS=$'\t' read -r kind from to w h inset; do
+while IFS=$'\t' read -r kind from to w h inset bg; do
   [ -n "$kind" ] || continue
   case "$want" in all|"$kind") ;; icons) [ "$kind" = icon ] || [ "$kind" = iconCommand ] || continue ;; *) continue ;; esac
   case "$kind" in
     iconCommand) sh -c "$from" ;;
-    icon|store-icon) shoot "$(wrap "$ROOT/$from" "$w" "$inset")" "$ROOT/$to" "$w" "$h" transparent ;;
-    *) shoot "$ROOT/$from" "$ROOT/$to" "$w" "$h" opaque ;;
+    icon|store-icon) shoot "$(wrap "$ROOT/$from" "$w" "$inset")" "$ROOT/$to" "$w" "$h" "$bg" ;;
+    *) shoot "$ROOT/$from" "$ROOT/$to" "$w" "$h" "$bg" ;;
   esac
   echo "$kind: ${to:-$from}"
 done <<< "$JOBS"
