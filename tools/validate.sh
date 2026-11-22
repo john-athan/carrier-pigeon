@@ -14,7 +14,7 @@ fail=0
 node tools/webext.mjs validate || fail=1
 
 printf '\n== The rules the extension installs are the rules it means to install\n'
-node test.js || fail=1
+node --test test/ || fail=1
 
 # The icons are generated and committed, because Chrome loads this folder as it
 # stands and an unpacked extension without its icons is a broken one. Committing
@@ -23,12 +23,12 @@ node test.js || fail=1
 # meta/make_icons.py is pure stdlib and byte-reproducible, so the proof is cheap.
 printf '\n== The committed icons are what the generator produces\n'
 python3 meta/make_icons.py >/dev/null || fail=1
-if git diff --quiet -- icons && [ -z "$(git status --porcelain -- screenshots/store-icon.png)" ]; then
+if git diff --quiet -- src/icons && [ -z "$(git status --porcelain -- screenshots/store-icon.png)" ]; then
   echo "ok, icons match meta/make_icons.py"
 else
   echo "FAIL: the generator no longer matches the committed icons:"
-  git status --short -- icons screenshots/store-icon.png
-  git checkout -- icons
+  git status --short -- src/icons screenshots/store-icon.png
+  git checkout -- src/icons
   fail=1
 fi
 

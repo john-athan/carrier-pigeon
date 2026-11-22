@@ -155,9 +155,11 @@ def render(size):
     return out
 
 # -- generate -------------------------------------------------------------------
-os.makedirs('icons', exist_ok=True)
+# Paths are from the repository root, wherever this is run from.
+os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+os.makedirs('src/icons', exist_ok=True)
 for size in (16, 48, 128):
-    name = f'icons/icon{size}.png'
+    name = f'src/icons/icon{size}.png'
     write_png(name, render(size), size)
     print(f'  {name}')
 

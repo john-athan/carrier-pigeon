@@ -1,7 +1,10 @@
 name: CI
 
-# A caller, never a container. The checks live in tools/validate.sh so they can
-# be run before a push with `oss check utm-randomizer`.
+# A caller, never a container. Every check lives in tools/validate.sh, so the
+# same checks run on the machine the code was written on, before the push, with
+# `oss check carrier-pigeon`. Logic that lives only in a workflow file can only ever
+# run after a push, somewhere else, which is the slowest place to learn that a
+# file is missing.
 
 on:
   push:
@@ -15,13 +18,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Third-party actions are pinned to commit SHAs rather than tags. A tag is
+# mutable, so whoever controls that repository would otherwise choose what runs
+# in this one.
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .node-version
+
       - name: Validate
         run: tools/validate.sh
+
+      # The store zip as it would be uploaded, for a look before a release.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: utm-randomizer-package
+          path: "*.zip"

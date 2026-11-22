@@ -1,8 +1,9 @@
 {
   "zip": "carrier-pigeon-{version}.zip",
-  "files": ["manifest.json", "background.js", "utm-data.js", "popup.html", "popup.js", "icons"],
   "hosts": ["*://*/*"],
-  "allow": { "html": ["popup.js"] },
+  "allow": {
+    "html": ["popup.js"]
+  },
   "assets": {
     "screenshots/store-main.jpg": [1280, 800],
     "screenshots/store-promo-small.png": [440, 280],
@@ -10,6 +11,13 @@
     "screenshots/store-icon.png": [128, 128]
   },
   "storeIcon": "screenshots/store-icon.png",
+  "render": {
+    "iconCommand": "python3 meta/make_icons.py",
+    "pages": [
+      {"group": "promo", "from": "meta/promo-small.html", "to": "screenshots/store-promo-small.png", "size": [440, 280]},
+      {"group": "promo", "from": "meta/promo-marquee.html", "to": "screenshots/store-promo-marquee.png", "size": [1400, 560]}
+    ]
+  },
   "justify": {
     "file": "docs/privacy-policy.html",
     "after": "<h2>Permissions explained</h2>",

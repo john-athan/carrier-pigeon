@@ -10,7 +10,7 @@ extension APIs, and ships no bundled library.
 
 ## Icons and screenshots
 
-`icons/`, `docs/` and `screenshots/` were produced for this project.
+`src/icons/`, `docs/` and `screenshots/` were produced for this project.
 
 ## Replacement strings
 

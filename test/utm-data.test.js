@@ -1,14 +1,12 @@
 // What the extension actually sends, checked without a browser.
 //
 // `utm-data.js` is split so the deciding and the shaping are pure functions and
-// only `rotateRules` needs chrome. Run directly (`node test.js`), through
+// only `rotateRules` needs chrome. Run directly (`node --test test/`), through
 // `tools/validate.sh`, or from CI, which calls that script and nothing else.
 
 const assert = require('node:assert/strict');
-const { utmValues, UTM_RULE_ID, chooseValues, buildRule } = require('./utm-data.js');
-
-let checks = 0;
-const check = (name, fn) => { fn(); checks++; console.log(`  ok ${name}`); };
+const { test: check } = require('node:test');
+const { utmValues, UTM_RULE_ID, chooseValues, buildRule } = require('../src/utm-data.js');
 
 check('every parameter gets a value from its own list', () => {
   for (const p of chooseValues()) {
@@ -83,5 +81,3 @@ check('the redirect keeps the rest of the URL', () => {
   assert.deepEqual(Object.keys(redirect.transform), ['queryTransform']);
   assert.deepEqual(Object.keys(redirect.transform.queryTransform), ['addOrReplaceParams']);
 });
-
-console.log(`\ntest: ${checks} checks passed`);
